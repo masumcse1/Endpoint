@@ -68,14 +68,16 @@ public class ProductCreate {
 	
 		MethodCallExpr methodCallExpr = new MethodCallExpr(new NameExpr("parameterMap"), "put");
 		methodCallExpr.addArgument(new StringLiteralExpr("product"));
-		methodCallExpr.addArgument("productDto.getProduct()");
-
+		methodCallExpr.addArgument(new MethodCallExpr(new NameExpr("productDto"), "getProduct"));
+		
+	
+		
 		blockStmt.addStatement(methodCallExpr);
 
 	
 		MethodCallExpr methodCallExpr1 = new MethodCallExpr(new NameExpr("parameterMap"), "put");
 		methodCallExpr1.addArgument(new StringLiteralExpr("type"));
-		methodCallExpr1.addArgument("productDto.getType()");
+		methodCallExpr1.addArgument(new MethodCallExpr(new NameExpr("productDto"), "getType"));
 
 		blockStmt.addStatement(methodCallExpr1);
 
