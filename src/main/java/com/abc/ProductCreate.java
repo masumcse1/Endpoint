@@ -84,7 +84,7 @@ public class ProductCreate {
 		blockStmt.addStatement(new ExpressionStmt(new NameExpr("setRequestResponse()")));
 
 		BlockStmt tryblock = new BlockStmt();
-		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "setProduct").addArgument("productDto.getProduct()"));
+		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "setProduct").addArgument(new MethodCallExpr(new NameExpr("productDto"), "getProduct")));
 		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "init").addArgument("parameterMap"));
 		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "execute").addArgument("parameterMap"));
 		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "finalize").addArgument("parameterMap"));
