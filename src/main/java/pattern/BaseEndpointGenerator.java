@@ -12,10 +12,6 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.stmt.TryStmt;
 
 public abstract class BaseEndpointGenerator {
-	
-    protected final String queryName;
-    protected final String queryClassName;
-    protected final String targetClassName;
     
     public abstract void generate();
     
@@ -47,7 +43,7 @@ public abstract class BaseEndpointGenerator {
 		// cb.addStatement(new ThrowStmt(new NameExpr(exceptionName)));
 		cc.setBody(cb);
 		ts.setCatchClauses(new NodeList<>(cc));
-		// return new BlockStmt(new NodeList<>(ts));
+	
 		return ts;
 	}
 

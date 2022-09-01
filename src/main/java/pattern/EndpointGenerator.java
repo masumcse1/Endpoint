@@ -23,9 +23,9 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 public class EndpointGenerator extends BaseEndpointGenerator {
 	
 	private final String endpointName = null;
-	String entityClass = "Product";
-	String dtoClass = "ProductDto";
-	String scriptservice = "CreateMyProduct";
+	String entityClass ;
+	String dtoClass ;
+	String scriptservice ;
 	String injectedFieldName ;
 	
 
@@ -34,8 +34,7 @@ public class EndpointGenerator extends BaseEndpointGenerator {
 		this.entityClass = entityClass;
 		this.dtoClass = dtoClass;
 		this.scriptservice = scriptservice;
-		this.injectedFieldName = injectedFieldName;
-		injectedFieldName = getNonCapitalizeName(scriptservice);
+		this.injectedFieldName = getNonCapitalizeName(scriptservice);
 	}
 
 
@@ -59,15 +58,13 @@ public class EndpointGenerator extends BaseEndpointGenerator {
 		NodeList<VariableDeclarator> var_result_declarator = new NodeList<>();
 		var_result_declarator.add(var_result);
 
-		beforeTryblock.addStatement(
-				new ExpressionStmt().setExpression(new VariableDeclarationExpr().setVariables(var_result_declarator)));
+		beforeTryblock.addStatement(new ExpressionStmt().setExpression(new VariableDeclarationExpr().setVariables(var_result_declarator)));
 
 		beforeTryblock.addStatement(new ExpressionStmt(new NameExpr("parameterMap = new HashMap<String, Object>()")));
 
 		MethodCallExpr getEntity_methodCall = new MethodCallExpr(new NameExpr("parameterMap"), "put");
 		getEntity_methodCall.addArgument(new StringLiteralExpr(getNonCapitalizeName(entityClass)));
-		getEntity_methodCall
-				.addArgument(new MethodCallExpr(new NameExpr(getNonCapitalizeName(dtoClass)), "get" + entityClass));
+		getEntity_methodCall.addArgument(new MethodCallExpr(new NameExpr(getNonCapitalizeName(dtoClass)), "get" + entityClass));
 
 		beforeTryblock.addStatement(getEntity_methodCall);
 
@@ -79,20 +76,10 @@ public class EndpointGenerator extends BaseEndpointGenerator {
 
 		beforeTryblock.addStatement(new ExpressionStmt(new NameExpr("setRequestResponse()")));
 
-		BlockStmt tryblock = new BlockStmt();
-		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "set" + entityClass)
-				.addArgument(new MethodCallExpr(new NameExpr(getNonCapitalizeName(dtoClass)), "get" + entityClass)));
-		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "init").addArgument("parameterMap"));
-		tryblock.addStatement(
-				new MethodCallExpr(new NameExpr(injectedFieldName), "execute").addArgument("parameterMap"));
-		tryblock.addStatement(
-				new MethodCallExpr(new NameExpr(injectedFieldName), "finalize").addArgument("parameterMap"));
-		tryblock.addStatement(assignment(var_result.getNameAsString(), injectedFieldName, "getResult"));
-
-		Statement trystatement = addingException(tryblock);
+		Statement trystatement = generateTryBlock(var_result);
 
 		beforeTryblock.addStatement(trystatement);
-		restMethod.setBody(beforeTryblock);
+		restMethod.setBody(beforeTryblock);    
 
 		restMethod.getBody().get().getStatements().add(getReturnType());
 
@@ -103,11 +90,9 @@ public class EndpointGenerator extends BaseEndpointGenerator {
 
 	
 	  private ClassOrInterfaceDeclaration generateRestClass(CompilationUnit cu) {
-		    ClassOrInterfaceDeclaration clazz = cu.addClass(getRestClassName(entityClass, "POST"),
-					Modifier.Keyword.PUBLIC);
+		    ClassOrInterfaceDeclaration clazz = cu.addClass(getRestClassName(entityClass, "POST"),	Modifier.Keyword.PUBLIC);
 			clazz.addSingleMemberAnnotation("Path", new StringLiteralExpr("myproduct"));
 			clazz.addMarkerAnnotation("RequestScoped");
-
 			
 			var injectedfield = clazz.addField(scriptservice, injectedFieldName, Modifier.Keyword.PRIVATE);
 			injectedfield.addMarkerAnnotation("Inject");
@@ -119,8 +104,7 @@ public class EndpointGenerator extends BaseEndpointGenerator {
 	  }
 	 
 	private MethodDeclaration generateRestMethod(ClassOrInterfaceDeclaration clazz) {
-		MethodDeclaration restMethod = clazz.addMethod(getRestMethodName(entityClass, "POST"),
-				Modifier.Keyword.PUBLIC);
+		MethodDeclaration restMethod = clazz.addMethod(getRestMethodName(entityClass, "POST"),	Modifier.Keyword.PUBLIC);
 		restMethod.addParameter(dtoClass, getNonCapitalizeName(dtoClass));
 		restMethod.setType("Response");
 		restMethod.addMarkerAnnotation("Post");
@@ -130,6 +114,18 @@ public class EndpointGenerator extends BaseEndpointGenerator {
 		// restMethod.addThrownException(ServletException.class);
         return restMethod;
 
+	}
+	
+	private Statement generateTryBlock(VariableDeclarator assignmentVariable) {
+		BlockStmt tryblock = new BlockStmt();
+		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "set" + entityClass).addArgument(new MethodCallExpr(new NameExpr(getNonCapitalizeName(dtoClass)), "get" + entityClass)));
+		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "init").addArgument("parameterMap"));
+		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "execute").addArgument("parameterMap"));
+		tryblock.addStatement(new MethodCallExpr(new NameExpr(injectedFieldName), "finalize").addArgument("parameterMap"));
+		tryblock.addStatement(assignment(assignmentVariable.getNameAsString(), injectedFieldName, "getResult"));
+		Statement trystatement = addingException(tryblock);
+		
+		return trystatement;
 	}
 
 	private ReturnStmt getReturnType() {
